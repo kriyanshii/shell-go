@@ -23,7 +23,10 @@ func main() {
 		cmds := strings.Split(cmd, " ")
 		if cmds[0] == "exit" {
 			os.Exit(0)
-		} else {
+		}
+		else if cmds[0] == "echo" {
+			fmt.Printf(fmt.Println(strings.Join(cmds[1:], " ")))
+		}else {
 			fmt.Println(strings.TrimSpace(cmds[0]) + ": command not found")
 		}
 	}
