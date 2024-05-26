@@ -20,6 +20,11 @@ func main() {
 		if err != nil {
 			fmt.Println(err.Error())
 		}
-		fmt.Printf("%s: command not found\n", strings.TrimRight(cmd, "\n"))
+		cmds := strings.Split(cmd, " ")
+		if cmds[0] == "exit" {
+			os.Exit(0)
+		} else {
+			fmt.Println(strings.TrimSpace(cmds[0]) + ": command not found")
+		}
 	}
 }
