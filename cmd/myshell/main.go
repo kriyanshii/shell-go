@@ -14,6 +14,7 @@ func main() {
 	stdin := bufio.NewReader(os.Stdin)
 	// Uncomment this block to pass the first stage
 	for {
+		// fmt.Fprint(os.Stdout, "$ ")
 		fmt.Fprint(os.Stdout, "$ ")
 		// Wait for user input
 		cmd, err := stdin.ReadString('\n')
@@ -24,7 +25,7 @@ func main() {
 		if cmds[0] == "exit" {
 			os.Exit(0)
 		} else if cmds[0] == "echo" {
-			fmt.Println(strings.Join(cmds[1:], " "))
+			fmt.Printf("%s\n", strings.Join(cmds[1:], " "))
 		} else {
 			fmt.Println(strings.TrimSpace(cmds[0]) + ": command not found")
 		}
