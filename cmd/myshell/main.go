@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-var KnownCommands = map[string]int{"exit": 0, "echo": 1, "type": 2}
+var KnownCommands = map[string]int{"exit": 0, "echo": 1, "type": 2, "pwd": 3, "cd": 4}
 
 func main() {
 	// // You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -31,7 +31,13 @@ func main() {
 		case "echo":
 			fmt.Printf("%s\n", strings.Join(cmds[1:], " "))
 		case "type":
-			checkType(cmds[1:])
+			handleType(cmds[1:])
+		case "pwd":
+			pwd, _ := os.Getwd()
+			fmt.Println(pwd)
+			continue
+		case "cd":
+			handleCd(cmds[1:])
 		default:
 			command := exec.Command(cmds[0], cmds[1:]...)
 			command.Stderr = os.Stderr
@@ -45,7 +51,14 @@ func main() {
 	}
 }
 
-func checkType(args []string) {
+func handleCd(args []string) {
+	command := args[0]
+	if err := os.Chdir(command); err != nil {
+		fmt.Fprintf(os.Stdout, "%s: No such file or directory\n", command)
+	}
+}
+
+func handleType(args []string) {
 	item := args[0]
 	if _, exists := KnownCommands[item]; exists {
 		class := "builtin"
