@@ -21,8 +21,21 @@ func main() {
 	for {
 		fmt.Fprint(os.Stdout, "$ ")
 		cmd, _ := stdin.ReadString('\n')
-		cmd = strings.TrimSpace(cmd)
-		cmds := strings.Split(cmd, " ")
+		cmd = strings.Trim(cmd, "\r\n")
+		var cmds []string
+		for {
+			start := strings.IndexAny(cmd, "'\"")
+			if start == -1 {
+				cmds = append(cmds, strings.Fields(cmd)...)
+				break
+			}
+			ch := cmd[start]
+			cmds = append(cmds, strings.Fields(cmd[:start])...)
+			cmd = cmd[start+1:]
+			end := strings.IndexByte(cmd, ch)
+			cmds = append(cmds, cmd[:end])
+			cmd = cmd[end+1:]
+		}
 		command := cmds[0]
 		switch command {
 		case "exit":
