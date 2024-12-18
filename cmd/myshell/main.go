@@ -4,9 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
+
+var KnownCommands = map[string]int{"exit": 0, "echo": 1, "type": 2}
 
 func main() {
 	// // You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -26,17 +29,29 @@ func main() {
 			os.Exit(code)
 		case "echo":
 			fmt.Printf("%s\n", strings.Join(split[1:], " "))
-
 		case "type":
-			typeCmd := strings.SplitN(strings.TrimSpace(split[1]), " ", 2)
-			switch typeCmd[0] {
-			case "exit", "echo", "type":
-				fmt.Fprintf(os.Stdout, "%v is a shell builtin\n", typeCmd[0])
-			default:
-				fmt.Fprintf(os.Stdout, "%v not found\n", typeCmd[0])
-			}
+			checkType(split[1:])
 		default:
-			fmt.Printf("%s: command not found\n", command)
+			fmt.Printf("%s: command not found \n", command)
 		}
 	}
+}
+
+func checkType(args []string) {
+	item := args[0]
+	if _, exists := KnownCommands[item]; exists {
+		class := "builtin"
+		fmt.Fprintf(os.Stdout, "%v is a shell %v\n", item, class)
+		return
+	} else {
+		paths := strings.Split(os.Getenv("PATH"), ":")
+		for _, path := range paths {
+			exec := filepath.Join(path, item)
+			if _, err := os.Stat(exec); err == nil {
+				fmt.Fprintf(os.Stdout, "%v is %v\n", item, exec)
+				return
+			}
+		}
+	}
+	fmt.Fprintf(os.Stdout, "%v: not found\n", item)
 }
