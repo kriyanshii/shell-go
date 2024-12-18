@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -21,21 +22,9 @@ func main() {
 	for {
 		fmt.Fprint(os.Stdout, "$ ")
 		cmd, _ := stdin.ReadString('\n')
-		cmd = strings.Trim(cmd, "\r\n")
-		var cmds []string
-		for {
-			start := strings.IndexAny(cmd, "'\"")
-			if start == -1 {
-				cmds = append(cmds, strings.Fields(cmd)...)
-				break
-			}
-			ch := cmd[start]
-			cmds = append(cmds, strings.Fields(cmd[:start])...)
-			cmd = cmd[start+1:]
-			end := strings.IndexByte(cmd, ch)
-			cmds = append(cmds, cmd[:end])
-			cmd = cmd[end+1:]
-		}
+		cmd = strings.TrimSuffix(cmd, "\n")
+		cmds := splitString(cmd)
+		fmt.Println("commands: ", cmds)
 		command := cmds[0]
 		switch command {
 		case "exit":
@@ -62,6 +51,26 @@ func main() {
 			}
 		}
 	}
+}
+
+func splitString(s string) []string {
+	fmt.Print("splitString: ", s)
+	re := regexp.MustCompile(`'[^']*'|"[^"]*"|\S+`)
+	matches := re.FindAllString(s, -1)
+	var result []string
+	for _, match := range matches {
+		fmt.Println("match: ", match)
+		if (match[0] == '\'' && match[len(match)-1] == '\'') || (match[0] == '"' && match[len(match)-1] == '"') {
+			fmt.Println(match[0], " - : - ", match[len(match)-1])
+			result = append(result, match[1:len(match)-1])
+		} else if match[0] == '\\' {
+			result = append(result, "")
+		} else {
+			result = append(result, match)
+			result = append(result, strings.ReplaceAll(match, "\\", ""))
+		}
+	}
+	return result
 }
 
 func handleCd(args []string) {
