@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -53,19 +52,44 @@ func main() {
 }
 
 func splitString(s string) []string {
-	re := regexp.MustCompile(`'[^']*'|"[^"]*"|\S+`)
-	matches := re.FindAllString(s, -1)
-	var result []string
-	for _, match := range matches {
-		if (match[0] == '\'' && match[len(match)-1] == '\'') || (match[0] == '"' && match[len(match)-1] == '"') {
-			result = append(result, match[1:len(match)-1])
-		} else if match[0] == '\\' {
-			result = append(result, "")
+	s = strings.Trim(s, "\r\n")
+	buf := ""
+	isSingleQuoted := false
+	isDoubleQuoted := false
+	var args []string
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c == '\\' && !isSingleQuoted && !isDoubleQuoted {
+			if i+1 < len(s) {
+				buf += string(s[i+1])
+				i++
+			}
+		} else if c == '\\' && isDoubleQuoted {
+			if i+1 < len(s) && s[i+1] == '$' || s[i+1] == '\\' || s[i+1] == '"' {
+				buf += string(s[i+1])
+				i++
+			} else {
+				buf += "\\"
+			}
+		} else if c == '\'' && !isDoubleQuoted {
+			isSingleQuoted = !isSingleQuoted
+		} else if c == '"' && !isSingleQuoted {
+			isDoubleQuoted = !isDoubleQuoted
+		} else if c == ' ' && !isSingleQuoted && !isDoubleQuoted {
+			appendArg(&args, &buf)
 		} else {
-			result = append(result, strings.ReplaceAll(match, "\\", ""))
+			buf += string(c)
 		}
 	}
-	return result
+	appendArg(&args, &buf)
+	return args
+}
+
+func appendArg(args *[]string, buf *string) {
+	if *buf != "" {
+		*args = append(*args, *buf)
+	}
+	*buf = ""
 }
 
 func handleCd(args []string) {
